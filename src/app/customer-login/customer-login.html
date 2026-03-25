@@ -1,0 +1,19 @@
+<div class="login-container">
+  <h2>כניסה ללקוח</h2>
+  <input type="number" [(ngModel)]="customerId" (keyup.enter)="onLogin()" placeholder="הכנס מספר לקוח" class="login-input">
+  <button class="login-btn" (click)="onLogin()">כניסה</button>
+
+  <div *ngIf="error" class="error-message">{{ error }}</div>
+
+  <div *ngIf="customer" class="customer-details">
+    <h3>פרטי לקוח:</h3>
+    <p>מספר: {{ customer?.Id }}</p>
+    <p>שם: {{ customer?.firstName }} {{ customer?.lastName }}</p>
+    <p>אימייל: {{ customer?.email }}</p>
+    <p>כתובת: {{ customer?.address }}</p>
+    <p *ngIf="customer?.City">עיר: {{ customer?.City?.name }}</p>
+    <p>מספר השכרות: {{ customer?.numRents }}</p>
+    <p *ngIf="customer?.Payment">סוג תשלום: {{ customer?.Payment?.type }}</p>
+  </div>
+</div>
+
