@@ -1,0 +1,52 @@
+<section class="payment-wrapper">
+  <h2>תשלום וביצוע השכרה</h2>
+
+  @if (!authService.customer()) {
+    <div style="color: #c00; font-weight: bold; margin-bottom: 16px;">
+      לא מחובר. יש להתחבר לפני ביצוע השכרה.
+      <a routerLink="/login" style="margin-right: 8px;">התחבר</a>
+    </div>
+  }
+
+  @if (authService.customer()) {
+    <div style="background: #f0f8ff; border-radius: 8px; padding: 10px 16px; margin-bottom: 16px; direction: rtl;">
+      <strong>לקוח מחובר:</strong>
+      {{ authService.customer()!.firstName }} {{ authService.customer()!.lastName }}
+      (ת.ז. {{ authService.customer()!.Id }})
+    </div>
+  }
+
+  @if (!selectedCar) {
+    <p>אין רכב נבחר. יש לבחור רכב קודם.</p>
+    <a routerLink="/choose-car">מעבר לבחירת רכב</a>
+  } @else {
+    <div class="car-summary">
+      <h3>רכב נבחר: {{ selectedCar.code }}</h3>
+      <p>רמה: {{ selectedCar.level }}</p>
+      <p>מחיר ליום: {{ selectedCar.priceForDay }} ₪</p>
+    </div>
+
+    <div class="form-grid">
+      <label for="startDate">תאריך התחלה</label>
+      <input id="startDate" type="datetime-local" [(ngModel)]="startDate" />
+
+      <label for="endDate">תאריך סיום</label>
+      <input id="endDate" type="datetime-local" [(ngModel)]="endDate" />
+
+      <label for="goal">מטרת השכרה</label>
+      <input id="goal" type="text" [(ngModel)]="goal" placeholder="טיול משפחתי / עבודה / אחר" />
+
+      <button type="button" (click)="submitRental()" [disabled]="isSubmitting || !authService.customer()">
+        {{ isSubmitting ? 'מבצע...' : 'ביצוע תשלום והשלמת השכרה' }}
+      </button>
+    </div>
+
+    @if (successMessage) {
+      <p class="success">{{ successMessage }}</p>
+    }
+
+    @if (errorMessage) {
+      <p class="error">{{ errorMessage }}</p>
+    }
+  }
+</section>

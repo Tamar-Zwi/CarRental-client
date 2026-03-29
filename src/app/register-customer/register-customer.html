@@ -1,5 +1,8 @@
 <div class="register-container" style="max-width: 400px; margin: 20px auto; padding: 20px; border: 1px solid #ccc; border-radius: 8px;">
-  <h2>הרשמת לקוח חדש</h2>
+
+  <!-- טופס הרשמה — נעלם אחרי הרשמה מוצלחת -->
+  <div *ngIf="!registeredCustomer">
+    <h2>הרשמת לקוח חדש</h2>
   
   <div style="display: flex; flex-direction: column; gap: 12px;">
     
@@ -18,8 +21,18 @@
     <label>כתובת:</label>
     <input type="text" [(ngModel)]="newCustomer.address" placeholder="הכנס כתובת" class="login-input">
 
-    <label>קוד עיר:</label>
-    <input type="number" [(ngModel)]="newCustomer.codeCity" placeholder="הכנס קוד עיר" class="login-input">
+    <label>עיר:</label>
+    <select [(ngModel)]="selectedCityCode" name="cityCode" class="login-input">
+      <option [ngValue]="null">בחר עיר</option>
+      <option *ngFor="let city of cities" [ngValue]="city.code">{{ city.name }}</option>
+    </select>
+
+    <div style="display: flex; gap: 8px; align-items: center;">
+      <input type="text" [(ngModel)]="newCityName" placeholder="הוספת עיר חדשה" class="login-input" style="margin: 0;">
+      <button type="button" (click)="addCity()" [disabled]="isAddingCity" class="login-btn" style="white-space: nowrap;">
+        {{ isAddingCity ? 'מוסיף...' : 'הוסף עיר' }}
+      </button>
+    </div>
 
     <label>קוד אמצעי תשלום:</label>
     <input type="number" [(ngModel)]="newCustomer.codePayment" placeholder="הכנס קוד אמצעי תשלום" class="login-input">
@@ -29,6 +42,46 @@
 
   <div *ngIf="message" [ngStyle]="{'color': isSuccess ? 'green' : 'red', 'margin-top': '15px', 'font-weight': 'bold'}">
     {{ message }}
+  </div>
+
+  </div> <!-- סוף אזור הטופס -->
+
+  <!-- כרטיס הצלחה — מוצג אחרי הרשמה מוצלחת -->
+  <div *ngIf="registeredCustomer" style="text-align: center; direction: rtl;">
+    <div style="font-size: 3rem;">✅</div>
+    <h2 style="color: #28a745;">ההרשמה הושלמה בהצלחה!</h2>
+    <h3>ברוך הבא, {{ registeredCustomer.firstName }} {{ registeredCustomer.lastName }}!</h3>
+
+    <table style="width: 100%; border-collapse: collapse; margin: 16px 0; text-align: right;">
+      <tr>
+        <td style="padding: 8px; font-weight: bold; border-bottom: 1px solid #eee;">תעודת זהות:</td>
+        <td style="padding: 8px; border-bottom: 1px solid #eee;">{{ registeredCustomer.Id }}</td>
+      </tr>
+      <tr>
+        <td style="padding: 8px; font-weight: bold; border-bottom: 1px solid #eee;">שם פרטי:</td>
+        <td style="padding: 8px; border-bottom: 1px solid #eee;">{{ registeredCustomer.firstName }}</td>
+      </tr>
+      <tr>
+        <td style="padding: 8px; font-weight: bold; border-bottom: 1px solid #eee;">שם משפחה:</td>
+        <td style="padding: 8px; border-bottom: 1px solid #eee;">{{ registeredCustomer.lastName }}</td>
+      </tr>
+      <tr>
+        <td style="padding: 8px; font-weight: bold; border-bottom: 1px solid #eee;">אימייל:</td>
+        <td style="padding: 8px; border-bottom: 1px solid #eee;">{{ registeredCustomer.email }}</td>
+      </tr>
+      <tr>
+        <td style="padding: 8px; font-weight: bold; border-bottom: 1px solid #eee;">כתובת:</td>
+        <td style="padding: 8px; border-bottom: 1px solid #eee;">{{ registeredCustomer.address }}</td>
+      </tr>
+      <tr *ngIf="registeredCustomer.Cities">
+        <td style="padding: 8px; font-weight: bold;">עיר:</td>
+        <td style="padding: 8px;">{{ registeredCustomer.Cities?.name }}</td>
+      </tr>
+    </table>
+
+    <button (click)="goToCars()" class="login-btn" style="background-color: #ff4e50; font-size: 1rem; padding: 12px 32px;">
+      המשך לרשימת הרכבים ←
+    </button>
   </div>
 
 </div>

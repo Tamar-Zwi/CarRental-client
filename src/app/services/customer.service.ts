@@ -1,6 +1,6 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { Observable } from 'rxjs';
+import { Observable, catchError } from 'rxjs';
 
 export interface Customer {
   Id: number;
@@ -11,8 +11,10 @@ export interface Customer {
   numRents: number;
   codePayment: number;
   address: string;
-  City: any;
-  Payment: any;
+  City?: any;
+  Cities?: any;
+  Payment?: any;
+  Payments?: any;
 }
 
 @Injectable({
@@ -23,17 +25,60 @@ export class CustomerService {
 
   constructor(private http: HttpClient) {}
 
-  getCustomerList(): Observable<Customer[]> {
-    return this.http.get<Customer[]>(this.url + '/GetCustomerList');
+  login(id: number): Observable<Customer> {
+    return this.http.get<Customer>(`${this.url}/login/${id}`);
   }
 
-getCustomerById(customerId: number): Observable<Customer> {
-  return this.http.get<Customer>(`${this.url}/GetCostomerByID/${customerId}`);
-}
+  checkIdExists(id: number): Observable<{ exists: boolean }> {
+    return this.http.get<{ exists: boolean }>(`${this.url}/checkid/${id}`);
+  }
 
-  insertNewCustomer(customer: Customer): Observable<string> {
+  register(customer: Customer): Observable<string> {
     return this.http.post(`${this.url}/insertclient`, customer, {
       responseType: 'text'
     });
+  }
+
+  getCustomerList(): Observable<Customer[]> {
+    return this.http.get<Customer[]>(this.url + '/getallclients');
+  }
+
+  getCustomerById(customerId: number): Observable<Customer> {
+    return this.login(customerId).pipe(
+      catchError(() => this.http.get<Customer>(`${this.url}/GetCostomerByID/${customerId}`))
+    );
+  }
+
+  insertNewCustomer(customer: Customer): Observable<string> {
+    return this.register(customer);
+  }
+
+  updateCustomer(customer: Customer): Observable<string> {
+    return this.http.put(`${this.url}/UpDateClient/client`, customer, {
+      responseType: 'text'
+    });
+  }
+
+  deleteCustomer(customer: Customer): Observable<string> {
+    return this.http.delete(`${this.url}`, {
+      body: customer,
+      responseType: 'text'
+    });
+  }
+
+  getCustomersOrderByName(): Observable<Customer[]> {
+    return this.http.get<Customer[]>(`${this.url}/GetCustomersOrderByName`);
+  }
+
+  getThreeV(): Observable<Customer[]> {
+    return this.http.get<Customer[]>(`${this.url}/GetThreeV`);
+  }
+
+  getFromCity(city: string): Observable<Customer[]> {
+    return this.http.get<Customer[]>(`${this.url}/GetFromCity?city=${encodeURIComponent(city)}`);
+  }
+
+  getDetailsPayments(id: number): Observable<any> {
+    return this.http.get<any>(`${this.url}/GetDeatailsPayments?id=${id}`);
   }
 }

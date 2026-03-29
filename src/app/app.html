@@ -1,10 +1,22 @@
 <nav class="navbar">
   <div class="navbar-logo">Easy CARS</div>
   <ul class="navbar-links">
-    <li><a routerLink="/cars">מאגר רכבים</a></li>
-    <li><a routerLink="/login">התחברות</a></li>
-    <li><a routerLink="/register">הרשמה חדשה</a></li>
+    @for (link of appBarService.links(); track link.path) {
+      @if (!authService.customer() || (link.path !== '/login' && link.path !== '/register')) {
+        <li><a [routerLink]="link.path">{{ link.label }}</a></li>
+      }
+    }
+    @if (authService.customer()) {
+      <li>
+        <button class="logout-btn" (click)="logout()">התנתק</button>
+      </li>
+    }
   </ul>
+  @if (authService.customer()) {
+    <div class="navbar-greeting">
+      שלום, {{ authService.customer()!.firstName }} {{ authService.customer()!.lastName }}
+    </div>
+  }
 </nav>
 
 <main style="padding: 20px;">

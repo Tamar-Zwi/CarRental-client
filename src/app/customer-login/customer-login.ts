@@ -1,8 +1,9 @@
 import { Component, ChangeDetectorRef } from '@angular/core';
 import { CustomerService, Customer } from '../services/customer.service';
+import { AuthService } from '../services/auth.service';
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
-import { RouterLink, Router } from '@angular/router'; // הוספנו את Router לכאן
+import { RouterLink, Router } from '@angular/router';
 
 @Component({
   selector: 'app-customer-login',
@@ -15,16 +16,19 @@ export class CustomerLoginComponent {
   customerId: number | null = null;
   customer: Customer | null = null;
   error: string | null = null;
+  rawResponse: string | null = null;  // לאבחון: תשובה גולמית מהשרת
 
   constructor(
     private customerService: CustomerService,
+    private authService: AuthService,
     private cdr: ChangeDetectorRef,
-    private router: Router // הזרקנו את הראוטר כדי שנוכל לנווט איתו
+    private router: Router
   ) {}
 
   onLogin() {
     this.error = null;
     this.customer = null;
+    this.rawResponse = null;
     
     const id = Number(this.customerId);
     if (!id || isNaN(id)) {
@@ -34,35 +38,29 @@ export class CustomerLoginComponent {
 
     this.customerService.getCustomerById(id).subscribe({
       next: (result: any) => {
-        // הוספתי הדפסה לקונסול כדי שנוכל לראות מה השרת באמת החזיר
-        console.log('תשובת השרת:', result); 
+        console.log('תשובת השרת:', result);
+        this.rawResponse = JSON.stringify(result, null, 2);
 
-        // בדיקה גמישה יותר: אם חזר משהו, ויש לו שם פרטי או מזהה
-        if (result && (result.firstName || result.Id || result.id)) {
-          // הלקוח קיים במערכת!
+        // אם קיבלנו תשובה כלשהי מהשרת שאינה null — הלקוח קיים
+        if (result) {
           this.customer = result;
+          this.authService.setCustomer(result);
           this.error = null;
           this.cdr.detectChanges();
         } else {
-          // הלקוח לא קיים
           this.customer = null;
-          this.error = 'לקוח לא נמצא, מעביר מיד לעמוד הרשמה...';
-          this.cdr.detectChanges(); 
-          
-          setTimeout(() => {
-            this.router.navigate(['/register']);
-          }, 1500);
+          this.error = 'השרת החזיר ריק (null) — לקוח לא נמצא';
+          this.cdr.detectChanges();
+          setTimeout(() => this.router.navigate(['/register']), 1500);
         }
       },
-      error: () => {
-        // הלקוח לא קיים (במקרה שהשרת זרק שגיאה)
+      error: (err: any) => {
+        console.error('שגיאת השרת:', err);
         this.customer = null;
-        this.error = 'לקוח לא נמצא, מעביר מיד לעמוד הרשמה...';
-        this.cdr.detectChanges(); 
-        
-        setTimeout(() => {
-          this.router.navigate(['/register']);
-        }, 1500);
+        this.rawResponse = `שגיאה ${err.status}: ${JSON.stringify(err.error)}`;
+        this.error = `שגיאה מהשרת (${err.status}) — לקוח לא נמצא, מעביר לעמוד הרשמה...`;
+        this.cdr.detectChanges();
+        setTimeout(() => this.router.navigate(['/register']), 2000);
       }
     });
   }

@@ -1,0 +1,31 @@
+<section class="select-wrapper">
+  <h2>בחירת רכב מהמאגר להשכרה</h2>
+
+  @if (isLoading) {
+    <p>טוען רכבים...</p>
+  }
+
+  @if (!isLoading && errorMessage) {
+    <p class="error">{{ errorMessage }}</p>
+  }
+
+  @if (!isLoading && !errorMessage && cars.length === 0) {
+    <p>אין רכבים זמינים כרגע.</p>
+  }
+
+  @if (!isLoading && !errorMessage && cars.length > 0) {
+    <div class="grid">
+      @for (car of cars; track car.code) {
+        <article class="card">
+          <h3>רכב {{ car.code }}</h3>
+          <p>רמה: {{ car.level }}</p>
+          <p>מקומות: {{ car.numSeats }}</p>
+          <p>מחיר ליום: {{ car.priceForDay }} ₪</p>
+          <button type="button" (click)="chooseCar(car)">בחר רכב</button>
+        </article>
+      }
+    </div>
+  }
+
+  <a routerLink="/cars" class="back-link">חזרה למאגר רכבים</a>
+</section>

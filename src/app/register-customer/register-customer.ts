@@ -1,8 +1,21 @@
-import { Component } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { CustomerService, Customer } from '../services/customer.service';
 import { Router } from '@angular/router';
+import { City, CityService } from '../services/city.service';
+import { AuthService } from '../services/auth.service';
+
+interface RegisterCustomerPayload {
+  Id: number;
+  firstName: string;
+  lastName: string;
+  codeCity: number;
+  email: string;
+  numRents: number;
+  codePayment: number;
+  address: string;
+}
 
 @Component({
   selector: 'app-register-customer',
@@ -11,43 +24,209 @@ import { Router } from '@angular/router';
   templateUrl: './register-customer.html',
   styleUrls: ['./register-customer.css']
 })
-export class RegisterCustomerComponent {
+export class RegisterCustomerComponent implements OnInit {
   // יצירת אובייקט ריק של לקוח לפי המודל שיש לך בסרוויס
   newCustomer: Customer = {
     Id: 0,
     firstName: '',
     lastName: '',
-    codeCity: 1, // שמתי 1 כברירת מחדל
+    codeCity: 0,
     email: '',
     numRents: 0,
-    codePayment: 1, // שמתי 1 כברירת מחדל
+    codePayment: 1,
     address: '',
-    City: null,
-    Payment: null
+    Cities: null,
+    Payments: null
   };
 
+  cities: City[] = [];
+  selectedCityCode: number | null = null;
+  newCityName: string = '';
   message: string = '';
   isSuccess: boolean = false;
+  isAddingCity: boolean = false;
+  registeredCustomer: Customer | null = null;
 
-  constructor(private customerService: CustomerService, private router: Router) {}
+  constructor(
+    private customerService: CustomerService,
+    private cityService: CityService,
+    private authService: AuthService,
+    private router: Router,
+    private cdr: ChangeDetectorRef
+  ) {}
+
+  ngOnInit() {
+    this.loadCities();
+  }
+
+  loadCities() {
+    this.cityService.getAllCities().subscribe({
+      next: (cities) => {
+        console.log('רשימת ערים מהשרת:', cities);
+        this.cities = cities || [];
+        if (this.selectedCityCode === null && this.cities.length > 0) {
+          this.selectedCityCode = this.cities[0].code;
+          console.log('נבחרה עיר ברירת מחדל:', this.selectedCityCode, this.cities[0]);
+        }
+      },
+      error: (err) => {
+        console.error('שגיאה בטעינת ערים:', err);
+        this.isSuccess = false;
+        this.message = 'לא הצלחנו לטעון רשימת ערים מהשרת.';
+      }
+    });
+  }
+
+  addCity() {
+    const cityName = this.newCityName.trim();
+    if (!cityName) {
+      this.isSuccess = false;
+      this.message = 'יש להזין שם עיר לפני הוספה.';
+      return;
+    }
+
+    // בדיקה אם העיר כבר קיימת ברשימה
+    const existingCity = this.cities.find(c => 
+      c.name.trim().toLowerCase() === cityName.toLowerCase()
+    );
+    if (existingCity) {
+      this.isSuccess = false;
+      this.message = `העיר "${cityName}" כבר קיימת ברשימה.`;
+      this.selectedCityCode = existingCity.code; // בוחרים אותה אוטומטית
+      this.newCityName = '';
+      return;
+    }
+
+    this.isAddingCity = true;
+    const newCity = { name: cityName };
+    console.log('שולח בקשת הוספת עיר:', newCity);
+    console.log('נתיב API:', 'http://localhost:53191/api/city/insertcity');
+    
+    this.cityService.addCity(newCity).subscribe({
+      next: (response) => {
+        console.log('נוספה עיר - תשובה מהשרת:', response);
+        this.newCityName = '';
+        this.isSuccess = true;
+        this.message = 'העיר נוספה בהצלחה!';
+        this.isAddingCity = false;
+        
+        // טעינת הרשימה מחדש ובחירה אוטומטית של העיר החדשה
+        setTimeout(() => {
+          this.cityService.getAllCities().subscribe({
+            next: (cities) => {
+              console.log('רשימת ערים לאחר הוספה:', cities);
+              this.cities = cities || [];
+              // מחפשים את העיר שהוספנו ובוחרים אותה
+              const addedCity = this.cities.find(c => 
+                c.name.trim().toLowerCase() === cityName.toLowerCase()
+              );
+              if (addedCity) {
+                this.selectedCityCode = addedCity.code;
+                console.log('נבחרה העיר החדשה:', addedCity);
+                this.cdr.detectChanges(); // אכיפת עידכון התצוגה
+              } else {
+                console.warn('העיר לא נמצאה ברשימה מהשרת');
+              }
+            },
+            error: (err) => {
+              console.error('שגיאה בטעינת רשימת ערים לאחר הוספה:', err);
+            }
+          });
+        }, 500); // הגדלתי ל-500ms כדי לתת לשרת זמן לאחסן את העיר
+      },
+      error: (err) => {
+        console.error('שגיאה בהוספת עיר:', err);
+        console.error('סטטוס:', err.status);
+        console.error('תשובת שרת:', err.error);
+        console.error('URL מלא:', err.url);
+        this.isSuccess = false;
+        
+        let errorMsg = 'הוספת העיר נכשלה: ';
+        if (err.status === 0) {
+          errorMsg += 'לא ניתן להתחבר לשרת. ודא שהשרת פועל.';
+        } else if (err.status === 404) {
+          errorMsg += 'נתיב ה-API לא נמצא (404). בדוק: /api/city/insertcity';
+        } else if (err.status === 400) {
+          errorMsg += 'בקשה לא תקינה. השרת דחה את הנתונים.';
+        } else if (err.status === 500) {
+          errorMsg += 'שגיאת שרת פנימית (500).';
+        } else {
+          errorMsg += `סטטוס ${err.status}`;
+        }
+        
+        this.message = errorMsg;
+        this.isAddingCity = false;
+      }
+    });
+  }
 
   onRegister() {
-    // קריאה לפונקציה שכבר כתבת בסרוויס
-    this.customerService.insertNewCustomer(this.newCustomer).subscribe({
-      next: (response) => {
-        this.isSuccess = true;
-        this.message = 'הלקוח נרשם בהצלחה! מיד תועבר להתחברות...';
-        
-        // המתנה של 2 שניות ואז מעבר אוטומטי לדף ההתחברות
-        setTimeout(() => {
-          this.router.navigate(['/login']);
-        }, 2000);
+    if (this.selectedCityCode === null || this.selectedCityCode === undefined) {
+      this.isSuccess = false;
+      this.message = 'יש לבחור עיר מהרשימה.';
+      return;
+    }
+
+    const payload: RegisterCustomerPayload = {
+      Id: this.newCustomer.Id,
+      firstName: this.newCustomer.firstName,
+      lastName: this.newCustomer.lastName,
+      codeCity: Number(this.selectedCityCode),
+      email: this.newCustomer.email,
+      numRents: this.newCustomer.numRents,
+      codePayment: this.newCustomer.codePayment,
+      address: this.newCustomer.address
+    };
+
+    this.customerService.checkIdExists(payload.Id).subscribe({
+      next: (result) => {
+        if (result?.exists) {
+          this.isSuccess = false;
+          this.message = 'תעודת הזהות כבר קיימת במערכת. נסי להתחבר.';
+          return;
+        }
+
+        this.customerService.register(payload as Customer).subscribe({
+          next: () => {
+            // אחרי הרשמה מוצלחת - עושים login מהשרת כדי לקבל את כל הנתונים המלאים
+            this.customerService.getCustomerById(payload.Id).subscribe({
+              next: (customerFromServer) => {
+                console.log('לקוח נרשם - נתונים מהשרת:', customerFromServer);
+                this.authService.setCustomer(customerFromServer);
+                this.registeredCustomer = customerFromServer;
+                this.isSuccess = true;
+                this.message = '';
+              },
+              error: (err) => {
+                console.error('שגיאה בטעינת נתוני הלקוח:', err);
+                // גם אם ה-login נכשל - נשמור את הנתונים הבסיסיים
+                const savedCustomer: Customer = {
+                  ...payload,
+                  Cities: this.cities.find(c => Number(c.code) === Number(payload.codeCity)) || null
+                };
+                this.authService.setCustomer(savedCustomer);
+                this.registeredCustomer = savedCustomer;
+                this.isSuccess = true;
+                this.message = '';
+              }
+            });
+          },
+          error: (err) => {
+            this.isSuccess = false;
+            this.message = 'הייתה שגיאה בהרשמה. ודאי שכל השדות תואמים ל-API.';
+            console.error(err);
+          }
+        });
       },
       error: (err) => {
         this.isSuccess = false;
-        this.message = 'הייתה שגיאה בהרשמה. אנא נסה שנית.';
+        this.message = 'לא הצלחנו לבדוק אם תעודת הזהות קיימת. נסי שוב.';
         console.error(err);
       }
     });
+  }
+
+  goToCars(): void {
+    this.router.navigate(['/cars']);
   }
 }

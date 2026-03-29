@@ -1,6 +1,9 @@
 import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { HttpErrorResponse } from '@angular/common/http';
+import { Router } from '@angular/router';
 import { CarService } from '../services/car';
+import { RentalService } from '../services/rental.service';
 
 @Component({
   selector: 'app-car-list',
@@ -12,27 +15,65 @@ import { CarService } from '../services/car';
 export class CarListComponent implements OnInit {
   cars: any[] = []; 
   errorMessage: string = '';
-  isLoading: boolean = true; // משתנה שיודע מתי אנחנו עדיין מחכים לשרת
+  isLoading: boolean = true;
+  isSeeding: boolean = false;
 
   constructor(
     private carService: CarService, 
-    private cdr: ChangeDetectorRef // הזרקנו את מרענן המסך
+    private cdr: ChangeDetectorRef,
+    private rentalService: RentalService,
+    private router: Router
   ) {}
 
   ngOnInit() {
+    this.loadCars();
+  }
+
+  loadCars() {
+    this.errorMessage = '';
+    this.isLoading = true;
+
     this.carService.getAllCars().subscribe({
       next: (data) => {
-        console.log('רכבים מהשרת:', data); // תוכלי לראות בדפדפן (F12) מה בדיוק הגיע
-        this.cars = data || []; // במקרה שחזר ריק, נשים מערך ריק
-        this.isLoading = false; // סיימנו לטעון!
-        this.cdr.detectChanges(); // פקודה למסך להתרענן
+        console.log('רכבים מהשרת:', data);
+        this.cars = data || [];
+        this.isLoading = false;
+        this.cdr.detectChanges();
       },
-      error: (err) => {
+      error: (err: HttpErrorResponse) => {
         console.error(err);
-        this.errorMessage = 'שגיאה בשליפת רכבים מהשרת. ודא שהשרת (C#) פועל.';
-        this.isLoading = false; // סיימנו לטעון (אבל עם שגיאה)
-        this.cdr.detectChanges(); // פקודה למסך להתרענן
+        if (err.status === 0) {
+          this.errorMessage = 'לא ניתן להתחבר לשרת. ודאי שה-API רץ על localhost:53191 וש-CORS תקין.';
+        } else if (err.status === 404) {
+          this.errorMessage = 'הנתיב לא נמצא: GET /api/car/getallcars';
+        } else {
+          this.errorMessage = `שגיאת שרת בטעינת רכבים: ${err.status} ${err.statusText}`;
+        }
+        this.isLoading = false;
+        this.cdr.detectChanges();
       }
     });
+  }
+
+  seedCars() {
+    this.isSeeding = true;
+    this.errorMessage = '';
+
+    this.carService.seedCars().subscribe({
+      next: () => {
+        this.isSeeding = false;
+        this.loadCars();
+      },
+      error: (err: HttpErrorResponse) => {
+        console.error(err);
+        this.errorMessage = 'נכשל מילוי רכבים אוטומטי. בדקי endpoint: POST /api/car/seeddata';
+        this.isSeeding = false;
+      }
+    });
+  }
+
+  selectForRent(car: any) {
+    this.rentalService.setSelectedCar(car);
+    this.router.navigate(['/rental-payment']);
   }
 }
