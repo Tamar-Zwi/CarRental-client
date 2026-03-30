@@ -37,6 +37,11 @@ export class RentalService {
     return this.http.get<any[]>(`${this.url}/rents`);
   }
 
+  getRentsByCustomer(customerId: number): Observable<any[]> {
+    // ננסה מספר אפשרויות של API
+    return this.http.get<any[]>(`${this.url}/GetRentsPerCustomer?customerId=${customerId}`);
+  }
+
   insertRent(rent: any): Observable<string> {
     return this.http.post(`${this.url}/InsertRent`, rent, {
       responseType: 'text'

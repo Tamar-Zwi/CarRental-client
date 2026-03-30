@@ -16,7 +16,6 @@ export class CarListComponent implements OnInit {
   cars: any[] = []; 
   errorMessage: string = '';
   isLoading: boolean = true;
-  isSeeding: boolean = false;
 
   constructor(
     private carService: CarService, 
@@ -51,23 +50,6 @@ export class CarListComponent implements OnInit {
         }
         this.isLoading = false;
         this.cdr.detectChanges();
-      }
-    });
-  }
-
-  seedCars() {
-    this.isSeeding = true;
-    this.errorMessage = '';
-
-    this.carService.seedCars().subscribe({
-      next: () => {
-        this.isSeeding = false;
-        this.loadCars();
-      },
-      error: (err: HttpErrorResponse) => {
-        console.error(err);
-        this.errorMessage = 'נכשל מילוי רכבים אוטומטי. בדקי endpoint: POST /api/car/seeddata';
-        this.isSeeding = false;
       }
     });
   }

@@ -2,19 +2,27 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable, catchError } from 'rxjs';
 
+export interface Payment {
+  code?: number; // מספור אוטומטי מהשרת
+  creaditCard: string;
+  validity: number;
+  cvc: number;
+}
+
 export interface Customer {
-  Id: number;
+  id: number;
+  Id?: number; // fallback לשרתים ישנים
   firstName: string;
   lastName: string;
   codeCity: number;
   email: string;
   numRents: number;
-  codePayment: number;
+  codePayment?: number; // אופציונלי - יתקבל מהשרת
   address: string;
   City?: any;
   Cities?: any;
-  Payment?: any;
-  Payments?: any;
+  Payment?: Payment;
+  Payments?: Payment;
 }
 
 @Injectable({

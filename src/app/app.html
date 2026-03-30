@@ -1,12 +1,17 @@
 <nav class="navbar">
-  <div class="navbar-logo">Easy CARS</div>
+  <div class="navbar-logo">
+    <a [routerLink]="authService.customer() ? '/cars' : '/login'" class="logo-link">Easy CARS</a>
+  </div>
   <ul class="navbar-links">
-    @for (link of appBarService.links(); track link.path) {
-      @if (!authService.customer() || (link.path !== '/login' && link.path !== '/register')) {
-        <li><a [routerLink]="link.path">{{ link.label }}</a></li>
-      }
-    }
-    @if (authService.customer()) {
+    @if (!authService.customer()) {
+      <!-- לא מחובר: התחברות, הרשמה וצפייה ברכבים -->
+      <li><a [routerLink]="'/login'" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">התחברות</a></li>
+      <li><a [routerLink]="'/register'" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">הרשמה</a></li>
+      <li><a [routerLink]="'/cars'" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">צפייה ברכבים</a></li>
+    } @else {
+      <!-- מחובר: צפייה ברכבים, ההזמנות שלי והתנתק -->
+      <li><a [routerLink]="'/cars'" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">צפייה ברכבים</a></li>
+      <li><a [routerLink]="'/my-rentals'" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">ההזמנות שלי</a></li>
       <li>
         <button class="logout-btn" (click)="logout()">התנתק</button>
       </li>

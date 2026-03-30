@@ -47,6 +47,8 @@ export class CustomerLoginComponent {
           this.authService.setCustomer(result);
           this.error = null;
           this.cdr.detectChanges();
+          // ניווט לעמוד הרכבים אחרי התחברות מוצלחת
+          this.router.navigate(['/cars']);
         } else {
           this.customer = null;
           this.error = 'השרת החזיר ריק (null) — לקוח לא נמצא';

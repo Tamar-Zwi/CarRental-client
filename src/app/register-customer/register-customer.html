@@ -34,8 +34,16 @@
       </button>
     </div>
 
-    <label>קוד אמצעי תשלום:</label>
-    <input type="number" [(ngModel)]="newCustomer.codePayment" placeholder="הכנס קוד אמצעי תשלום" class="login-input">
+    <h3 style="margin-top: 20px; margin-bottom: 10px; color: #333;">פרטי תשלום</h3>
+
+    <label>מספר כרטיס אשראי:</label>
+    <input type="text" [(ngModel)]="creditCard" placeholder="הכנס מספר כרטיס (16 ספרות)" maxlength="16" class="login-input">
+
+    <label>חודש תוקף (1-12):</label>
+    <input type="number" [(ngModel)]="validity" placeholder="הכנס חודש תוקף" min="1" max="12" class="login-input">
+
+    <label>CVV/CVC (3 ספרות):</label>
+    <input type="number" [(ngModel)]="cvc" placeholder="הכנס קוד אבטחה" min="100" max="999" class="login-input">
 
     <button (click)="onRegister()" class="login-btn" style="margin-top: 10px; background-color: #28a745;">הרשם למערכת</button>
   </div>
@@ -55,7 +63,7 @@
     <table style="width: 100%; border-collapse: collapse; margin: 16px 0; text-align: right;">
       <tr>
         <td style="padding: 8px; font-weight: bold; border-bottom: 1px solid #eee;">תעודת זהות:</td>
-        <td style="padding: 8px; border-bottom: 1px solid #eee;">{{ registeredCustomer.Id }}</td>
+        <td style="padding: 8px; border-bottom: 1px solid #eee;">{{ registeredCustomer.id || registeredCustomer.Id }}</td>
       </tr>
       <tr>
         <td style="padding: 8px; font-weight: bold; border-bottom: 1px solid #eee;">שם פרטי:</td>

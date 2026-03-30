@@ -1,12 +1,9 @@
 <div style="max-width: 900px; margin: 0 auto; padding: 20px;">
   <h2>מאגר רכבים להשכרה</h2>
 
-  <div style="display: flex; gap: 10px; margin-bottom: 14px;">
+  <div style="margin-bottom: 14px;">
     <button type="button" (click)="loadCars()" style="padding: 8px 12px; border: 1px solid #ccc; border-radius: 6px; cursor: pointer;">
       רענון רכבים
-    </button>
-    <button type="button" (click)="seedCars()" [disabled]="isSeeding" style="padding: 8px 12px; border: none; border-radius: 6px; background: #198754; color: #fff; cursor: pointer;">
-      {{ isSeeding ? 'ממלא נתונים...' : 'מילוי 20 רכבים לדוגמה' }}
     </button>
   </div>
   
@@ -19,7 +16,7 @@
   </div>
 
   <div *ngIf="!isLoading && cars.length === 0 && !errorMessage">
-    <p>אין רכבים במאגר כרגע. אפשר ללחוץ על "מילוי 20 רכבים לדוגמה".</p>
+    <p>אין רכבים במאגר כרגע.</p>
   </div>
 
   <div *ngIf="!isLoading && cars.length > 0" style="display: flex; flex-wrap: wrap; gap: 20px; margin-top: 20px;">

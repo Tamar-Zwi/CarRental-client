@@ -1,0 +1,69 @@
+<div class="rentals-container">
+  <h2>ההזמנות שלי</h2>
+
+  @if (!authService.customer()) {
+    <div class="alert alert-warning">
+      <p>לא מחובר. יש להתחבר כדי לצפות בהזמנות.</p>
+      <a routerLink="/login" class="btn-link">מעבר להתחברות</a>
+    </div>
+  } @else {
+    <div class="customer-info">
+      <strong>לקוח:</strong> {{ authService.customer()!.firstName }} {{ authService.customer()!.lastName }}
+    </div>
+
+    @if (isLoading) {
+      <div class="loading">טוען הזמנות...</div>
+    }
+
+    @if (errorMessage) {
+      <div class="alert alert-error">{{ errorMessage }}</div>
+    }
+
+    @if (!isLoading && !errorMessage && rentals.length === 0) {
+      <div class="no-rentals">
+        <p>אין לך הזמנות עדיין.</p>
+        <a routerLink="/cars" class="btn-primary">מעבר לרכבים זמינים</a>
+      </div>
+    }
+
+    @if (rentals.length > 0) {
+      <div class="rentals-list">
+        @for (rental of rentals; track rental.code || $index) {
+          <div class="rental-card">
+            <div class="rental-header">
+              <h3>הזמנה מספר: {{ rental.code }}</h3>
+              <span class="rental-status">פעילה</span>
+            </div>
+            
+            <div class="rental-details">
+              <div class="detail-row">
+                <strong>קוד רכב:</strong>
+                <span>{{ rental.codeCar }}</span>
+              </div>
+              
+              <div class="detail-row">
+                <strong>תאריך התחלה:</strong>
+                <span>{{ formatDate(rental.startDate) }}</span>
+              </div>
+              
+              <div class="detail-row">
+                <strong>תאריך סיום:</strong>
+                <span>{{ formatDate(rental.endDate) }}</span>
+              </div>
+              
+              <div class="detail-row">
+                <strong>משך השכרה:</strong>
+                <span>{{ calculateDuration(rental.startDate, rental.endDate) }} ימים</span>
+              </div>
+              
+              <div class="detail-row">
+                <strong>מטרה:</strong>
+                <span>{{ rental.goal || 'לא צוין' }}</span>
+              </div>
+            </div>
+          </div>
+        }
+      </div>
+    }
+  }
+</div>

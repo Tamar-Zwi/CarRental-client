@@ -15,10 +15,6 @@ export class CarService {
     return this.http.get<any[]>(this.url + '/getallcars');
   }
 
-  seedCars(): Observable<any> {
-    return this.http.post<any>(`${this.url}/seeddata`, {});
-  }
-
   insertCar(car: any): Observable<string> {
     return this.http.post(`${this.url}/insertcar/car`, car, {
       responseType: 'text'

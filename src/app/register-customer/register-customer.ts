@@ -27,16 +27,16 @@ interface RegisterCustomerPayload {
 export class RegisterCustomerComponent implements OnInit {
   // יצירת אובייקט ריק של לקוח לפי המודל שיש לך בסרוויס
   newCustomer: Customer = {
+    id: 0,
     Id: 0,
     firstName: '',
     lastName: '',
     codeCity: 0,
     email: '',
     numRents: 0,
-    codePayment: 1,
     address: '',
     Cities: null,
-    Payments: null
+    Payments: undefined
   };
 
   cities: City[] = [];
@@ -46,6 +46,11 @@ export class RegisterCustomerComponent implements OnInit {
   isSuccess: boolean = false;
   isAddingCity: boolean = false;
   registeredCustomer: Customer | null = null;
+
+  // פרטי כרטיס אשראי
+  creditCard: string = '';
+  validity: number | null = null;
+  cvc: number | null = null;
 
   constructor(
     private customerService: CustomerService,
@@ -167,15 +172,43 @@ export class RegisterCustomerComponent implements OnInit {
       return;
     }
 
-    const payload: RegisterCustomerPayload = {
-      Id: this.newCustomer.Id,
+    // בדיקת תקינות פרטי כרטיס אשראי
+    if (!this.creditCard || this.creditCard.length < 15) {
+      this.isSuccess = false;
+      this.message = 'יש להזין מספר כרטיס אשראי תקין (15-16 ספרות).';
+      return;
+    }
+    if (!this.validity || this.validity < 1 || this.validity > 12) {
+      this.isSuccess = false;
+      this.message = 'יש להזין חודש תוקף תקין (1-12).';
+      return;
+    }
+    if (!this.cvc || this.cvc < 100 || this.cvc > 999) {
+      this.isSuccess = false;
+      this.message = 'יש להזין CVV/CVC תקין (3 ספרות).';
+      return;
+    }
+
+    const payload: any = {
+      Id: this.newCustomer.id || this.newCustomer.Id || 0,
       firstName: this.newCustomer.firstName,
       lastName: this.newCustomer.lastName,
       codeCity: Number(this.selectedCityCode),
       email: this.newCustomer.email,
-      numRents: this.newCustomer.numRents,
-      codePayment: this.newCustomer.codePayment,
-      address: this.newCustomer.address
+      numRents: 0,
+      codePayment: 1, // ערך זמני - נעדכן אחרי יצירת פרטי התשלום
+      address: this.newCustomer.address,
+      Payments: {
+        creaditCard: this.creditCard,
+        validity: this.validity!,
+        cvc: this.cvc!
+      }
+    };
+
+    const paymentData = {
+      creaditCard: this.creditCard,
+      validity: this.validity!,
+      cvc: this.cvc!
     };
 
     this.customerService.checkIdExists(payload.Id).subscribe({
@@ -187,34 +220,58 @@ export class RegisterCustomerComponent implements OnInit {
         }
 
         this.customerService.register(payload as Customer).subscribe({
-          next: () => {
-            // אחרי הרשמה מוצלחת - עושים login מהשרת כדי לקבל את כל הנתונים המלאים
-            this.customerService.getCustomerById(payload.Id).subscribe({
-              next: (customerFromServer) => {
-                console.log('לקוח נרשם - נתונים מהשרת:', customerFromServer);
-                this.authService.setCustomer(customerFromServer);
-                this.registeredCustomer = customerFromServer;
-                this.isSuccess = true;
-                this.message = '';
-              },
-              error: (err) => {
-                console.error('שגיאה בטעינת נתוני הלקוח:', err);
-                // גם אם ה-login נכשל - נשמור את הנתונים הבסיסיים
-                const savedCustomer: Customer = {
-                  ...payload,
-                  Cities: this.cities.find(c => Number(c.code) === Number(payload.codeCity)) || null
-                };
-                this.authService.setCustomer(savedCustomer);
-                this.registeredCustomer = savedCustomer;
-                this.isSuccess = true;
-                this.message = '';
-              }
-            });
+          next: (response) => {
+            console.log('✅ הרשמה הושלמה בהצלחה:', response);
+            console.log('📦 Payload שנשלח:', payload);
+            
+            // נחכה רגע קטן לתת לשרת לסיים
+            setTimeout(() => {
+              // עכשיו נעדכן את פרטי התשלום
+              const customerWithPayment: Customer = {
+                id: payload.Id,
+                Id: payload.Id,
+                firstName: payload.firstName,
+                lastName: payload.lastName,
+                codeCity: payload.codeCity,
+                email: payload.email,
+                numRents: 0,
+                address: payload.address,
+                Cities: this.cities.find(c => Number(c.code) === Number(payload.codeCity)) || null,
+                Payments: paymentData
+              };
+
+              console.log('📝 מעדכן פרטי תשלום:', paymentData);
+              
+              // עדכון פרטי התשלום בשרת
+              this.customerService.updateCustomer(customerWithPayment).subscribe({
+                next: () => {
+                  console.log('✅ פרטי תשלום עודכנו בהצלחה');
+                  this.authService.setCustomer(customerWithPayment);
+                  this.registeredCustomer = customerWithPayment;
+                  this.isSuccess = true;
+                  this.message = '';
+                  this.cdr.detectChanges();
+                },
+                error: (err) => {
+                  console.error('❌ נכשל עדכון פרטי תשלום:', err);
+                  console.error('📄 סטטוס:', err.status);
+                  console.error('📄 תשובה:', err.error);
+                  // גם אם עדכון התשלום נכשל, נמשיך עם הלקוח
+                  this.authService.setCustomer(customerWithPayment);
+                  this.registeredCustomer = customerWithPayment;
+                  this.isSuccess = true;
+                  this.message = '';
+                  this.cdr.detectChanges();
+                }
+              });
+            }, 500); // המתנה של חצי שנייה
           },
           error: (err) => {
+            console.error('❌ שגיאה בהרשמה:', err);
+            console.error('📄 סטטוס:', err.status);
+            console.error('📄 תשובה:', err.error);
             this.isSuccess = false;
             this.message = 'הייתה שגיאה בהרשמה. ודאי שכל השדות תואמים ל-API.';
-            console.error(err);
           }
         });
       },
