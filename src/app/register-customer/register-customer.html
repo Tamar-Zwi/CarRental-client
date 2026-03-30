@@ -1,58 +1,45 @@
-<div class="register-container" style="max-width: 400px; margin: 20px auto; padding: 20px; border: 1px solid #ccc; border-radius: 8px;">
-
+<div class="register-form-wrapper">
   <!-- טופס הרשמה — נעלם אחרי הרשמה מוצלחת -->
   <div *ngIf="!registeredCustomer">
     <h2>הרשמת לקוח חדש</h2>
-  
-  <div style="display: flex; flex-direction: column; gap: 12px;">
-    
-    <label>תעודת זהות / מספר לקוח:</label>
-    <input type="number" [(ngModel)]="newCustomer.Id" placeholder="הכנס תעודת זהות" class="login-input">
-
-    <label>שם פרטי:</label>
-    <input type="text" [(ngModel)]="newCustomer.firstName" placeholder="הכנס שם פרטי" class="login-input">
-
-    <label>שם משפחה:</label>
-    <input type="text" [(ngModel)]="newCustomer.lastName" placeholder="הכנס שם משפחה" class="login-input">
-
-    <label>אימייל:</label>
-    <input type="email" [(ngModel)]="newCustomer.email" placeholder="הכנס אימייל" class="login-input">
-
-    <label>כתובת:</label>
-    <input type="text" [(ngModel)]="newCustomer.address" placeholder="הכנס כתובת" class="login-input">
-
-    <label>עיר:</label>
-    <select [(ngModel)]="selectedCityCode" name="cityCode" class="login-input">
-      <option [ngValue]="null">בחר עיר</option>
-      <option *ngFor="let city of cities" [ngValue]="city.code">{{ city.name }}</option>
-    </select>
-
-    <div style="display: flex; gap: 8px; align-items: center;">
-      <input type="text" [(ngModel)]="newCityName" placeholder="הוספת עיר חדשה" class="login-input" style="margin: 0;">
-      <button type="button" (click)="addCity()" [disabled]="isAddingCity" class="login-btn" style="white-space: nowrap;">
-        {{ isAddingCity ? 'מוסיף...' : 'הוסף עיר' }}
-      </button>
+    <div style="display: flex; flex-direction: column; gap: 12px;">
+      <label>תעודת זהות / מספר לקוח:</label>
+      <input type="number" [(ngModel)]="newCustomer.Id" placeholder="הכנס תעודת זהות" class="login-input">
+      <label>שם פרטי:</label>
+      <input type="text" [(ngModel)]="newCustomer.firstName" placeholder="הכנס שם פרטי" class="login-input">
+      <label>שם משפחה:</label>
+      <input type="text" [(ngModel)]="newCustomer.lastName" placeholder="הכנס שם משפחה" class="login-input">
+      <label>אימייל:</label>
+      <input type="email" [(ngModel)]="newCustomer.email" placeholder="הכנס אימייל" class="login-input">
+      <label>כתובת:</label>
+      <input type="text" [(ngModel)]="newCustomer.address" placeholder="הכנס כתובת" class="login-input">
+      <label>עיר:</label>
+      <select [(ngModel)]="selectedCityCode" name="cityCode" class="login-input">
+        <option [ngValue]="null">בחר עיר</option>
+        <option *ngFor="let city of cities" [ngValue]="city.code">{{ city.name }}</option>
+      </select>
+      <div style="display: flex; gap: 8px; align-items: center;">
+        <input type="text" [(ngModel)]="newCityName" placeholder="הוספת עיר חדשה" class="login-input" style="margin: 0;">
+        <button type="button" (click)="addCity()" [disabled]="isAddingCity" class="login-btn" style="white-space: nowrap;">
+          {{ isAddingCity ? 'מוסיף...' : 'הוסף עיר' }}
+        </button>
+      </div>
+      <h3 style="margin-top: 20px; margin-bottom: 10px; color: #333;">פרטי תשלום</h3>
+      <label>מספר כרטיס אשראי:</label>
+      <input type="text" [(ngModel)]="creditCard" placeholder="הכנס מספר כרטיס (16 ספרות)" maxlength="16" class="login-input">
+      <label>חודש תוקף (1-12):</label>
+      <input type="number" [(ngModel)]="validity" placeholder="הכנס חודש תוקף" min="1" max="12" class="login-input">
+      <label>CVV/CVC (3 ספרות):</label>
+      <input type="number" [(ngModel)]="cvc" placeholder="הכנס קוד אבטחה" min="100" max="999" class="login-input">
+      <button (click)="onRegister()" class="login-btn" style="margin-top: 10px; background-color: #28a745;">הרשם למערכת</button>
     </div>
-
-    <h3 style="margin-top: 20px; margin-bottom: 10px; color: #333;">פרטי תשלום</h3>
-
-    <label>מספר כרטיס אשראי:</label>
-    <input type="text" [(ngModel)]="creditCard" placeholder="הכנס מספר כרטיס (16 ספרות)" maxlength="16" class="login-input">
-
-    <label>חודש תוקף (1-12):</label>
-    <input type="number" [(ngModel)]="validity" placeholder="הכנס חודש תוקף" min="1" max="12" class="login-input">
-
-    <label>CVV/CVC (3 ספרות):</label>
-    <input type="number" [(ngModel)]="cvc" placeholder="הכנס קוד אבטחה" min="100" max="999" class="login-input">
-
-    <button (click)="onRegister()" class="login-btn" style="margin-top: 10px; background-color: #28a745;">הרשם למערכת</button>
   </div>
 
   <div *ngIf="message" [ngStyle]="{'color': isSuccess ? 'green' : 'red', 'margin-top': '15px', 'font-weight': 'bold'}">
+
     {{ message }}
   </div>
-
-  </div> <!-- סוף אזור הטופס -->
+<!-- סוף אזור הטופס -->
 
   <!-- כרטיס הצלחה — מוצג אחרי הרשמה מוצלחת -->
   <div *ngIf="registeredCustomer" style="text-align: center; direction: rtl;">

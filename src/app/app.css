@@ -7,7 +7,7 @@
   padding: 1rem 2rem;
   direction: rtl; /* יישור לימין עבור עברית */
 }
-
+/* עיצוב עבר לקובץ styles.css הראשי */
 .nav-links {
   list-style: none;
   display: flex;

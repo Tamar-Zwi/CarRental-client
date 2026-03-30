@@ -1,15 +1,17 @@
 <nav class="navbar">
   <div class="navbar-logo">
-    <a [routerLink]="authService.customer() ? '/cars' : '/login'" class="logo-link">Easy CARS</a>
+    <a [routerLink]="authService.customer() ? '/cars' : '/login'" class="logo-link">
+      <span style="font-weight:bold; letter-spacing:2px;">Easy</span>
+      <span style="color:var(--primary-blue); font-weight:bold;">CARS</span>
+      <span style="font-size:1.3rem; color:var(--success-green); vertical-align:middle; margin-right:6px;">&#128663;</span>
+    </a>
   </div>
   <ul class="navbar-links">
     @if (!authService.customer()) {
-      <!-- לא מחובר: התחברות, הרשמה וצפייה ברכבים -->
       <li><a [routerLink]="'/login'" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">התחברות</a></li>
       <li><a [routerLink]="'/register'" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">הרשמה</a></li>
       <li><a [routerLink]="'/cars'" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">צפייה ברכבים</a></li>
     } @else {
-      <!-- מחובר: צפייה ברכבים, ההזמנות שלי והתנתק -->
       <li><a [routerLink]="'/cars'" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">צפייה ברכבים</a></li>
       <li><a [routerLink]="'/my-rentals'" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">ההזמנות שלי</a></li>
       <li>
@@ -19,11 +21,11 @@
   </ul>
   @if (authService.customer()) {
     <div class="navbar-greeting">
-      שלום, {{ authService.customer()!.firstName }} {{ authService.customer()!.lastName }}
+      שלום, <span style="color:var(--success-green); font-weight:bold;">{{ authService.customer()!.firstName }}</span> {{ authService.customer()!.lastName }}
     </div>
   }
 </nav>
 
-<main style="padding: 20px;">
+<main>
   <router-outlet></router-outlet>
 </main>
